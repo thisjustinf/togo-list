@@ -1,16 +1,17 @@
 package main
 
 import (
-	"github.com/adhtanjung/go_rest_api/database"
-	"github.com/adhtanjung/go_rest_api/router"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	_ "github.com/lib/pq"
+
+	"github.com/JustinTimeToCode/togo-list/db/"
+	"github.com/JustinTimeToCode/togo-list/router"
 )
 
 func main() {
-	database.Connect()
+	db.Connect()
 	app := fiber.New()
 	app.Use(logger.New())
 	app.Use(cors.New())
