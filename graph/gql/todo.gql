@@ -1,0 +1,14 @@
+type Todo {
+  id: ID!
+  text: String!
+  done: Boolean!
+  user: User!
+}
+
+extend type Query{
+
+}
+
+extend type Mutation{
+    
+}
