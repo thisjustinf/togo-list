@@ -1,12 +1,30 @@
 type User {
-  id: ID!
-  name: String!
+  id: UUID!
+  firstName: String!
+  lastName: String!
+  username: String!
+  password: String!
+  createdAt: Time!
+  lastUpdatedAt: Time!
+}
+
+input RegisterDTO{
+    firstName: String!
+    lastName: String!
+    username: String!
+    password: String!
+}
+
+input LoginDTO{
+    username: String!
+    password: String!
 }
 
 extend type Query{
-
+    getUser(userId: UUID): User
 }
 
 extend type Mutation{
-    
+    register(registerDTO: RegisterDTO): UUID!
+    login(loginDTO: LoginDTO): User!
 }

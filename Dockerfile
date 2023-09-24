@@ -1,5 +1,5 @@
 # Use an official Golang runtime as a base image
-FROM golang:1.21-alpine AS builder
+FROM golang:1.21.1-alpine AS builder
 
 # Set the working directory inside the container
 WORKDIR /app
@@ -27,12 +27,6 @@ WORKDIR /app
 
 # Copy the binary from the builder stage to this stage
 COPY --from=builder /app/server .
-
-# Set environment variables for the PostgreSQL connection
-ENV POSTGRES_USER=myuser
-ENV POSTGRES_PASSWORD=mypassword
-ENV POSTGRES_DB=mydb
-ENV POSTGRES_HOST=mydbhost
 
 # Expose the port your application is running on
 EXPOSE 8080
