@@ -2,19 +2,51 @@
 
 package models
 
-type NewTodo struct {
-	Text   string `json:"text"`
-	UserID string `json:"userId"`
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
+
+type CreateTodoDto struct {
+	Title       string `json:"title"`
+	Description string `json:"description"`
+}
+
+type LoginDto struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+type RegisterDto struct {
+	FirstName string `json:"firstName"`
+	LastName  string `json:"lastName"`
+	Username  string `json:"username"`
+	Password  string `json:"password"`
 }
 
 type Todo struct {
-	ID   string `json:"id"`
-	Text string `json:"text"`
-	Done bool   `json:"done"`
-	User *User  `json:"user"`
+	ID            string    `json:"id"`
+	Title         string    `json:"title"`
+	Description   string    `json:"description"`
+	Completed     bool      `json:"completed"`
+	User          uuid.UUID `json:"user"`
+	CreatedAt     time.Time `json:"createdAt"`
+	LastUpdatedAt time.Time `json:"lastUpdatedAt"`
+}
+
+type UpdateTodoDto struct {
+	Title       *string `json:"title,omitempty"`
+	Description *string `json:"description,omitempty"`
+	Completed   *string `json:"completed,omitempty"`
 }
 
 type User struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID            uuid.UUID `json:"id"`
+	FirstName     string    `json:"firstName"`
+	LastName      string    `json:"lastName"`
+	Username      string    `json:"username"`
+	Password      string    `json:"password"`
+	CreatedAt     time.Time `json:"createdAt"`
+	LastUpdatedAt time.Time `json:"lastUpdatedAt"`
 }

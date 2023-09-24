@@ -1,14 +1,31 @@
 type Todo {
   id: ID!
-  text: String!
-  done: Boolean!
-  user: User!
+  title: String!
+  description: String!
+  completed: Boolean!
+  user: UUID!
+  createdAt: Time!
+  lastUpdatedAt: Time!
 }
 
-extend type Query{
-
+input CreateTodoDTO {
+  title: String!
+  description: String!
 }
 
-extend type Mutation{
-    
+input UpdateTodoDTO {
+  title: String
+  description: String
+  completed: String
+}
+
+extend type Query {
+  getTodos(user: UUID!): [Todo!]
+  getTodo(id: UUID!): Todo!
+}
+
+extend type Mutation {
+  createTodo(createTodoDTO: CreateTodoDTO): UUID!
+  updateTodo(updateTodoDTO: UpdateTodoDTO): Todo!
+  deleteTodo(id: ID!): Boolean
 }
