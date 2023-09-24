@@ -1,0 +1,24 @@
+version: '3'
+
+services:
+  # PostgreSQL service
+  postgres:
+    image: postgres:latest
+    env_file: .env
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+  # Golang application service
+  togo:
+    build:
+      context: .
+    env_file: .env
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+
+volumes:
+  pg_data:
