@@ -4,6 +4,19 @@
 scalar Time
 scalar UUID
 
+enum State{
+  SUCCESS
+  ERROR
+}
+
+union ResponseData = Todo | User
+
+type ResponseStatus{
+  status: State!
+  message: String!
+  payload: ResponseData
+}
+
 type Query {
   health: String
 }

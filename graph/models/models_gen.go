@@ -3,10 +3,17 @@
 package models
 
 import (
+	"fmt"
+	"io"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
 )
+
+type ResponseData interface {
+	IsResponseData()
+}
 
 type CreateTodoDto struct {
 	Title       string `json:"title"`
@@ -25,6 +32,12 @@ type RegisterDto struct {
 	Password  string `json:"password"`
 }
 
+type ResponseStatus struct {
+	Status  State        `json:"status"`
+	Message string       `json:"message"`
+	Payload ResponseData `json:"payload,omitempty"`
+}
+
 type Todo struct {
 	ID            string    `json:"id"`
 	Title         string    `json:"title"`
@@ -35,10 +48,17 @@ type Todo struct {
 	LastUpdatedAt time.Time `json:"lastUpdatedAt"`
 }
 
+func (Todo) IsResponseData() {}
+
 type UpdateTodoDto struct {
 	Title       *string `json:"title,omitempty"`
 	Description *string `json:"description,omitempty"`
 	Completed   *string `json:"completed,omitempty"`
+}
+
+type UpdateUserDto struct {
+	Username *string `json:"username,omitempty"`
+	Password *string `json:"password,omitempty"`
 }
 
 type User struct {
@@ -49,4 +69,47 @@ type User struct {
 	Password      string    `json:"password"`
 	CreatedAt     time.Time `json:"createdAt"`
 	LastUpdatedAt time.Time `json:"lastUpdatedAt"`
+}
+
+func (User) IsResponseData() {}
+
+type State string
+
+const (
+	StateSuccess State = "SUCCESS"
+	StateError   State = "ERROR"
+)
+
+var AllState = []State{
+	StateSuccess,
+	StateError,
+}
+
+func (e State) IsValid() bool {
+	switch e {
+	case StateSuccess, StateError:
+		return true
+	}
+	return false
+}
+
+func (e State) String() string {
+	return string(e)
+}
+
+func (e *State) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = State(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid State", str)
+	}
+	return nil
+}
+
+func (e State) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
 }
