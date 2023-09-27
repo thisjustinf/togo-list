@@ -1,11 +1,15 @@
 package main
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/gin-gonic/gin"
 
+	"github.com/JustinTimeToCode/togo-list/graph/database"
 	gen "github.com/JustinTimeToCode/togo-list/graph/generated"
 	mid "github.com/JustinTimeToCode/togo-list/graph/middleware"
 	res "github.com/JustinTimeToCode/togo-list/graph/resolvers"
@@ -32,11 +36,11 @@ func playgroundHandler() gin.HandlerFunc {
 
 func main() {
 	// Setting up Gin
+	database.InitDB()
 	r := gin.Default()
-	r.Use(gin.Logger())
-	r.Use(gin.Recovery())
 	r.Use(mid.GinContextToContextMiddleware())
+	r.SetTrustedProxies([]string{"127.0.0.1"})
 	r.POST("/query", graphqlHandler())
 	r.GET("/", playgroundHandler())
-	r.Run()
+	r.Run(fmt.Sprintf(":%s", os.Getenv("PORT")))
 }
