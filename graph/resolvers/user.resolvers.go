@@ -8,8 +8,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/JustinTimeToCode/togo-list/graph/models"
 	"github.com/google/uuid"
+
+	"github.com/JustinTimeToCode/togo-list/graph/models"
 )
 
 // Register is the resolver for the register field.

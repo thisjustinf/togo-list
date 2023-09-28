@@ -10,10 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// var db *gorm.DB
-
 func InitDB() (*gorm.DB, error) {
-	var err error
 	POSTGRES_USER := os.Getenv("POSTGRES_USER")
 	POSTGRES_PASSWORD := os.Getenv("POSTGRES_PASSWORD")
 	POSTGRES_DB := os.Getenv("POSTGRES_DB")
