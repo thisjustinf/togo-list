@@ -14,8 +14,8 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
-	"github.com/JustinTimeToCode/togo-list/graph/models"
 	"github.com/google/uuid"
+	"github.com/thisjustinf/togo-list/internal/graphql/models"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -63,29 +63,29 @@ type ComplexityRoot struct {
 	}
 
 	ResponseStatus struct {
+		Data    func(childComplexity int) int
 		Message func(childComplexity int) int
-		Payload func(childComplexity int) int
 		Status  func(childComplexity int) int
 	}
 
 	Todo struct {
-		Completed     func(childComplexity int) int
-		CreatedAt     func(childComplexity int) int
-		Description   func(childComplexity int) int
-		ID            func(childComplexity int) int
-		LastUpdatedAt func(childComplexity int) int
-		Title         func(childComplexity int) int
-		User          func(childComplexity int) int
+		Completed   func(childComplexity int) int
+		CreatedAt   func(childComplexity int) int
+		Description func(childComplexity int) int
+		ID          func(childComplexity int) int
+		Title       func(childComplexity int) int
+		UpdatedAt   func(childComplexity int) int
+		UserID      func(childComplexity int) int
 	}
 
 	User struct {
-		CreatedAt     func(childComplexity int) int
-		FirstName     func(childComplexity int) int
-		ID            func(childComplexity int) int
-		LastName      func(childComplexity int) int
-		LastUpdatedAt func(childComplexity int) int
-		Password      func(childComplexity int) int
-		Username      func(childComplexity int) int
+		CreatedAt func(childComplexity int) int
+		FirstName func(childComplexity int) int
+		ID        func(childComplexity int) int
+		LastName  func(childComplexity int) int
+		Password  func(childComplexity int) int
+		UpdatedAt func(childComplexity int) int
+		Username  func(childComplexity int) int
 	}
 }
 
@@ -234,19 +234,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Health(childComplexity), true
 
+	case "ResponseStatus.data":
+		if e.complexity.ResponseStatus.Data == nil {
+			break
+		}
+
+		return e.complexity.ResponseStatus.Data(childComplexity), true
+
 	case "ResponseStatus.message":
 		if e.complexity.ResponseStatus.Message == nil {
 			break
 		}
 
 		return e.complexity.ResponseStatus.Message(childComplexity), true
-
-	case "ResponseStatus.payload":
-		if e.complexity.ResponseStatus.Payload == nil {
-			break
-		}
-
-		return e.complexity.ResponseStatus.Payload(childComplexity), true
 
 	case "ResponseStatus.status":
 		if e.complexity.ResponseStatus.Status == nil {
@@ -283,13 +283,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Todo.ID(childComplexity), true
 
-	case "Todo.lastUpdatedAt":
-		if e.complexity.Todo.LastUpdatedAt == nil {
-			break
-		}
-
-		return e.complexity.Todo.LastUpdatedAt(childComplexity), true
-
 	case "Todo.title":
 		if e.complexity.Todo.Title == nil {
 			break
@@ -297,12 +290,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Todo.Title(childComplexity), true
 
-	case "Todo.user":
-		if e.complexity.Todo.User == nil {
+	case "Todo.updatedAt":
+		if e.complexity.Todo.UpdatedAt == nil {
 			break
 		}
 
-		return e.complexity.Todo.User(childComplexity), true
+		return e.complexity.Todo.UpdatedAt(childComplexity), true
+
+	case "Todo.userId":
+		if e.complexity.Todo.UserID == nil {
+			break
+		}
+
+		return e.complexity.Todo.UserID(childComplexity), true
 
 	case "User.createdAt":
 		if e.complexity.User.CreatedAt == nil {
@@ -332,19 +332,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.User.LastName(childComplexity), true
 
-	case "User.lastUpdatedAt":
-		if e.complexity.User.LastUpdatedAt == nil {
-			break
-		}
-
-		return e.complexity.User.LastUpdatedAt(childComplexity), true
-
 	case "User.password":
 		if e.complexity.User.Password == nil {
 			break
 		}
 
 		return e.complexity.User.Password(childComplexity), true
+
+	case "User.updatedAt":
+		if e.complexity.User.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.User.UpdatedAt(childComplexity), true
 
 	case "User.username":
 		if e.complexity.User.Username == nil {
@@ -463,7 +463,7 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "../gql/schema.gql", Input: `# GraphQL schema example
+	{Name: "../schemas/schema.gql", Input: `# GraphQL schema example
 #
 # https://gqlgen.com/getting-started/
 scalar Time
@@ -479,21 +479,21 @@ union ResponseData = Todo | User
 type ResponseStatus{
   status: State!
   message: String!
-  payload: ResponseData
+  data: ResponseData
 }
 
 type Query {
   health: String
 }
 `, BuiltIn: false},
-	{Name: "../gql/todo.gql", Input: `type Todo {
+	{Name: "../schemas/todo.gql", Input: `type Todo {
   id: ID!
   title: String!
   description: String!
   completed: Boolean!
-  user: UUID!
+  userId: UUID!
   createdAt: Time!
-  lastUpdatedAt: Time!
+  updatedAt: Time!
 }
 
 input CreateTodoDTO {
@@ -518,14 +518,14 @@ extend type Mutation {
   deleteTodo(id: ID!): Boolean
 }
 `, BuiltIn: false},
-	{Name: "../gql/user.gql", Input: `type User {
+	{Name: "../schemas/user.gql", Input: `type User {
   id: UUID!
   firstName: String!
   lastName: String!
   username: String!
   password: String!
   createdAt: Time!
-  lastUpdatedAt: Time!
+  updatedAt: Time!
 }
 
 input RegisterDTO{
@@ -567,7 +567,7 @@ func (ec *executionContext) field_Mutation_createTodo_args(ctx context.Context, 
 	var arg0 *models.CreateTodoDto
 	if tmp, ok := rawArgs["createTodoDTO"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createTodoDTO"))
-		arg0, err = ec.unmarshalOCreateTodoDTO2ᚖgithubᚗcomᚋJustinTimeToCodeᚋtogoᚑlistᚋgraphᚋmodelsᚐCreateTodoDto(ctx, tmp)
+		arg0, err = ec.unmarshalOCreateTodoDTO2ᚖgithubᚗcomᚋthisjustinfᚋtogoᚑlistᚋinternalᚋgraphqlᚋmodelsᚐCreateTodoDto(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -597,7 +597,7 @@ func (ec *executionContext) field_Mutation_login_args(ctx context.Context, rawAr
 	var arg0 *models.LoginDto
 	if tmp, ok := rawArgs["loginDTO"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("loginDTO"))
-		arg0, err = ec.unmarshalOLoginDTO2ᚖgithubᚗcomᚋJustinTimeToCodeᚋtogoᚑlistᚋgraphᚋmodelsᚐLoginDto(ctx, tmp)
+		arg0, err = ec.unmarshalOLoginDTO2ᚖgithubᚗcomᚋthisjustinfᚋtogoᚑlistᚋinternalᚋgraphqlᚋmodelsᚐLoginDto(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -612,7 +612,7 @@ func (ec *executionContext) field_Mutation_register_args(ctx context.Context, ra
 	var arg0 *models.RegisterDto
 	if tmp, ok := rawArgs["registerDTO"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("registerDTO"))
-		arg0, err = ec.unmarshalORegisterDTO2ᚖgithubᚗcomᚋJustinTimeToCodeᚋtogoᚑlistᚋgraphᚋmodelsᚐRegisterDto(ctx, tmp)
+		arg0, err = ec.unmarshalORegisterDTO2ᚖgithubᚗcomᚋthisjustinfᚋtogoᚑlistᚋinternalᚋgraphqlᚋmodelsᚐRegisterDto(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -627,7 +627,7 @@ func (ec *executionContext) field_Mutation_updateTodo_args(ctx context.Context, 
 	var arg0 *models.UpdateTodoDto
 	if tmp, ok := rawArgs["updateTodoDTO"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updateTodoDTO"))
-		arg0, err = ec.unmarshalOUpdateTodoDTO2ᚖgithubᚗcomᚋJustinTimeToCodeᚋtogoᚑlistᚋgraphᚋmodelsᚐUpdateTodoDto(ctx, tmp)
+		arg0, err = ec.unmarshalOUpdateTodoDTO2ᚖgithubᚗcomᚋthisjustinfᚋtogoᚑlistᚋinternalᚋgraphqlᚋmodelsᚐUpdateTodoDto(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -642,7 +642,7 @@ func (ec *executionContext) field_Mutation_updateUser_args(ctx context.Context, 
 	var arg0 *models.UpdateUserDto
 	if tmp, ok := rawArgs["updateUserDTO"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updateUserDTO"))
-		arg0, err = ec.unmarshalOUpdateUserDTO2ᚖgithubᚗcomᚋJustinTimeToCodeᚋtogoᚑlistᚋgraphᚋmodelsᚐUpdateUserDto(ctx, tmp)
+		arg0, err = ec.unmarshalOUpdateUserDTO2ᚖgithubᚗcomᚋthisjustinfᚋtogoᚑlistᚋinternalᚋgraphqlᚋmodelsᚐUpdateUserDto(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -832,7 +832,7 @@ func (ec *executionContext) _Mutation_updateTodo(ctx context.Context, field grap
 	}
 	res := resTmp.(*models.Todo)
 	fc.Result = res
-	return ec.marshalNTodo2ᚖgithubᚗcomᚋJustinTimeToCodeᚋtogoᚑlistᚋgraphᚋmodelsᚐTodo(ctx, field.Selections, res)
+	return ec.marshalNTodo2ᚖgithubᚗcomᚋthisjustinfᚋtogoᚑlistᚋinternalᚋgraphqlᚋmodelsᚐTodo(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_updateTodo(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -851,12 +851,12 @@ func (ec *executionContext) fieldContext_Mutation_updateTodo(ctx context.Context
 				return ec.fieldContext_Todo_description(ctx, field)
 			case "completed":
 				return ec.fieldContext_Todo_completed(ctx, field)
-			case "user":
-				return ec.fieldContext_Todo_user(ctx, field)
+			case "userId":
+				return ec.fieldContext_Todo_userId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Todo_createdAt(ctx, field)
-			case "lastUpdatedAt":
-				return ec.fieldContext_Todo_lastUpdatedAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Todo_updatedAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Todo", field.Name)
 		},
@@ -1010,7 +1010,7 @@ func (ec *executionContext) _Mutation_login(ctx context.Context, field graphql.C
 	}
 	res := resTmp.(*models.User)
 	fc.Result = res
-	return ec.marshalNUser2ᚖgithubᚗcomᚋJustinTimeToCodeᚋtogoᚑlistᚋgraphᚋmodelsᚐUser(ctx, field.Selections, res)
+	return ec.marshalNUser2ᚖgithubᚗcomᚋthisjustinfᚋtogoᚑlistᚋinternalᚋgraphqlᚋmodelsᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_login(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1033,8 +1033,8 @@ func (ec *executionContext) fieldContext_Mutation_login(ctx context.Context, fie
 				return ec.fieldContext_User_password(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
-			case "lastUpdatedAt":
-				return ec.fieldContext_User_lastUpdatedAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_User_updatedAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -1081,7 +1081,7 @@ func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field grap
 	}
 	res := resTmp.(*models.ResponseStatus)
 	fc.Result = res
-	return ec.marshalNResponseStatus2ᚖgithubᚗcomᚋJustinTimeToCodeᚋtogoᚑlistᚋgraphᚋmodelsᚐResponseStatus(ctx, field.Selections, res)
+	return ec.marshalNResponseStatus2ᚖgithubᚗcomᚋthisjustinfᚋtogoᚑlistᚋinternalᚋgraphqlᚋmodelsᚐResponseStatus(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_updateUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1096,8 +1096,8 @@ func (ec *executionContext) fieldContext_Mutation_updateUser(ctx context.Context
 				return ec.fieldContext_ResponseStatus_status(ctx, field)
 			case "message":
 				return ec.fieldContext_ResponseStatus_message(ctx, field)
-			case "payload":
-				return ec.fieldContext_ResponseStatus_payload(ctx, field)
+			case "data":
+				return ec.fieldContext_ResponseStatus_data(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ResponseStatus", field.Name)
 		},
@@ -1182,7 +1182,7 @@ func (ec *executionContext) _Query_getTodos(ctx context.Context, field graphql.C
 	}
 	res := resTmp.([]*models.Todo)
 	fc.Result = res
-	return ec.marshalOTodo2ᚕᚖgithubᚗcomᚋJustinTimeToCodeᚋtogoᚑlistᚋgraphᚋmodelsᚐTodoᚄ(ctx, field.Selections, res)
+	return ec.marshalOTodo2ᚕᚖgithubᚗcomᚋthisjustinfᚋtogoᚑlistᚋinternalᚋgraphqlᚋmodelsᚐTodoᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_getTodos(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1201,12 +1201,12 @@ func (ec *executionContext) fieldContext_Query_getTodos(ctx context.Context, fie
 				return ec.fieldContext_Todo_description(ctx, field)
 			case "completed":
 				return ec.fieldContext_Todo_completed(ctx, field)
-			case "user":
-				return ec.fieldContext_Todo_user(ctx, field)
+			case "userId":
+				return ec.fieldContext_Todo_userId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Todo_createdAt(ctx, field)
-			case "lastUpdatedAt":
-				return ec.fieldContext_Todo_lastUpdatedAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Todo_updatedAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Todo", field.Name)
 		},
@@ -1253,7 +1253,7 @@ func (ec *executionContext) _Query_getTodo(ctx context.Context, field graphql.Co
 	}
 	res := resTmp.(*models.Todo)
 	fc.Result = res
-	return ec.marshalNTodo2ᚖgithubᚗcomᚋJustinTimeToCodeᚋtogoᚑlistᚋgraphᚋmodelsᚐTodo(ctx, field.Selections, res)
+	return ec.marshalNTodo2ᚖgithubᚗcomᚋthisjustinfᚋtogoᚑlistᚋinternalᚋgraphqlᚋmodelsᚐTodo(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_getTodo(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1272,12 +1272,12 @@ func (ec *executionContext) fieldContext_Query_getTodo(ctx context.Context, fiel
 				return ec.fieldContext_Todo_description(ctx, field)
 			case "completed":
 				return ec.fieldContext_Todo_completed(ctx, field)
-			case "user":
-				return ec.fieldContext_Todo_user(ctx, field)
+			case "userId":
+				return ec.fieldContext_Todo_userId(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Todo_createdAt(ctx, field)
-			case "lastUpdatedAt":
-				return ec.fieldContext_Todo_lastUpdatedAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Todo_updatedAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Todo", field.Name)
 		},
@@ -1321,7 +1321,7 @@ func (ec *executionContext) _Query_getUser(ctx context.Context, field graphql.Co
 	}
 	res := resTmp.(*models.User)
 	fc.Result = res
-	return ec.marshalOUser2ᚖgithubᚗcomᚋJustinTimeToCodeᚋtogoᚑlistᚋgraphᚋmodelsᚐUser(ctx, field.Selections, res)
+	return ec.marshalOUser2ᚖgithubᚗcomᚋthisjustinfᚋtogoᚑlistᚋinternalᚋgraphqlᚋmodelsᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_getUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1344,8 +1344,8 @@ func (ec *executionContext) fieldContext_Query_getUser(ctx context.Context, fiel
 				return ec.fieldContext_User_password(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_User_createdAt(ctx, field)
-			case "lastUpdatedAt":
-				return ec.fieldContext_User_lastUpdatedAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_User_updatedAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -1521,7 +1521,7 @@ func (ec *executionContext) _ResponseStatus_status(ctx context.Context, field gr
 	}
 	res := resTmp.(models.State)
 	fc.Result = res
-	return ec.marshalNState2githubᚗcomᚋJustinTimeToCodeᚋtogoᚑlistᚋgraphᚋmodelsᚐState(ctx, field.Selections, res)
+	return ec.marshalNState2githubᚗcomᚋthisjustinfᚋtogoᚑlistᚋinternalᚋgraphqlᚋmodelsᚐState(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ResponseStatus_status(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1581,8 +1581,8 @@ func (ec *executionContext) fieldContext_ResponseStatus_message(ctx context.Cont
 	return fc, nil
 }
 
-func (ec *executionContext) _ResponseStatus_payload(ctx context.Context, field graphql.CollectedField, obj *models.ResponseStatus) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_ResponseStatus_payload(ctx, field)
+func (ec *executionContext) _ResponseStatus_data(ctx context.Context, field graphql.CollectedField, obj *models.ResponseStatus) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ResponseStatus_data(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1595,7 +1595,7 @@ func (ec *executionContext) _ResponseStatus_payload(ctx context.Context, field g
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Payload, nil
+		return obj.Data, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1606,10 +1606,10 @@ func (ec *executionContext) _ResponseStatus_payload(ctx context.Context, field g
 	}
 	res := resTmp.(models.ResponseData)
 	fc.Result = res
-	return ec.marshalOResponseData2githubᚗcomᚋJustinTimeToCodeᚋtogoᚑlistᚋgraphᚋmodelsᚐResponseData(ctx, field.Selections, res)
+	return ec.marshalOResponseData2githubᚗcomᚋthisjustinfᚋtogoᚑlistᚋinternalᚋgraphqlᚋmodelsᚐResponseData(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_ResponseStatus_payload(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_ResponseStatus_data(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "ResponseStatus",
 		Field:      field,
@@ -1798,8 +1798,8 @@ func (ec *executionContext) fieldContext_Todo_completed(ctx context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _Todo_user(ctx context.Context, field graphql.CollectedField, obj *models.Todo) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Todo_user(ctx, field)
+func (ec *executionContext) _Todo_userId(ctx context.Context, field graphql.CollectedField, obj *models.Todo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Todo_userId(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1812,7 +1812,7 @@ func (ec *executionContext) _Todo_user(ctx context.Context, field graphql.Collec
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.User, nil
+		return obj.UserID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1829,7 +1829,7 @@ func (ec *executionContext) _Todo_user(ctx context.Context, field graphql.Collec
 	return ec.marshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Todo_user(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Todo_userId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Todo",
 		Field:      field,
@@ -1886,8 +1886,8 @@ func (ec *executionContext) fieldContext_Todo_createdAt(ctx context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _Todo_lastUpdatedAt(ctx context.Context, field graphql.CollectedField, obj *models.Todo) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Todo_lastUpdatedAt(ctx, field)
+func (ec *executionContext) _Todo_updatedAt(ctx context.Context, field graphql.CollectedField, obj *models.Todo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Todo_updatedAt(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1900,7 +1900,7 @@ func (ec *executionContext) _Todo_lastUpdatedAt(ctx context.Context, field graph
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.LastUpdatedAt, nil
+		return obj.UpdatedAt, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1917,7 +1917,7 @@ func (ec *executionContext) _Todo_lastUpdatedAt(ctx context.Context, field graph
 	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Todo_lastUpdatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Todo_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Todo",
 		Field:      field,
@@ -2194,8 +2194,8 @@ func (ec *executionContext) fieldContext_User_createdAt(ctx context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _User_lastUpdatedAt(ctx context.Context, field graphql.CollectedField, obj *models.User) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_User_lastUpdatedAt(ctx, field)
+func (ec *executionContext) _User_updatedAt(ctx context.Context, field graphql.CollectedField, obj *models.User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_updatedAt(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -2208,7 +2208,7 @@ func (ec *executionContext) _User_lastUpdatedAt(ctx context.Context, field graph
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.LastUpdatedAt, nil
+		return obj.UpdatedAt, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2225,7 +2225,7 @@ func (ec *executionContext) _User_lastUpdatedAt(ctx context.Context, field graph
 	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_User_lastUpdatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_User_updatedAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "User",
 		Field:      field,
@@ -4490,8 +4490,8 @@ func (ec *executionContext) _ResponseStatus(ctx context.Context, sel ast.Selecti
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "payload":
-			out.Values[i] = ec._ResponseStatus_payload(ctx, field, obj)
+		case "data":
+			out.Values[i] = ec._ResponseStatus_data(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -4546,8 +4546,8 @@ func (ec *executionContext) _Todo(ctx context.Context, sel ast.SelectionSet, obj
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "user":
-			out.Values[i] = ec._Todo_user(ctx, field, obj)
+		case "userId":
+			out.Values[i] = ec._Todo_userId(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -4556,8 +4556,8 @@ func (ec *executionContext) _Todo(ctx context.Context, sel ast.SelectionSet, obj
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "lastUpdatedAt":
-			out.Values[i] = ec._Todo_lastUpdatedAt(ctx, field, obj)
+		case "updatedAt":
+			out.Values[i] = ec._Todo_updatedAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -4625,8 +4625,8 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "lastUpdatedAt":
-			out.Values[i] = ec._User_lastUpdatedAt(ctx, field, obj)
+		case "updatedAt":
+			out.Values[i] = ec._User_updatedAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -5009,11 +5009,11 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 	return res
 }
 
-func (ec *executionContext) marshalNResponseStatus2githubᚗcomᚋJustinTimeToCodeᚋtogoᚑlistᚋgraphᚋmodelsᚐResponseStatus(ctx context.Context, sel ast.SelectionSet, v models.ResponseStatus) graphql.Marshaler {
+func (ec *executionContext) marshalNResponseStatus2githubᚗcomᚋthisjustinfᚋtogoᚑlistᚋinternalᚋgraphqlᚋmodelsᚐResponseStatus(ctx context.Context, sel ast.SelectionSet, v models.ResponseStatus) graphql.Marshaler {
 	return ec._ResponseStatus(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNResponseStatus2ᚖgithubᚗcomᚋJustinTimeToCodeᚋtogoᚑlistᚋgraphᚋmodelsᚐResponseStatus(ctx context.Context, sel ast.SelectionSet, v *models.ResponseStatus) graphql.Marshaler {
+func (ec *executionContext) marshalNResponseStatus2ᚖgithubᚗcomᚋthisjustinfᚋtogoᚑlistᚋinternalᚋgraphqlᚋmodelsᚐResponseStatus(ctx context.Context, sel ast.SelectionSet, v *models.ResponseStatus) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -5023,13 +5023,13 @@ func (ec *executionContext) marshalNResponseStatus2ᚖgithubᚗcomᚋJustinTimeT
 	return ec._ResponseStatus(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNState2githubᚗcomᚋJustinTimeToCodeᚋtogoᚑlistᚋgraphᚋmodelsᚐState(ctx context.Context, v interface{}) (models.State, error) {
+func (ec *executionContext) unmarshalNState2githubᚗcomᚋthisjustinfᚋtogoᚑlistᚋinternalᚋgraphqlᚋmodelsᚐState(ctx context.Context, v interface{}) (models.State, error) {
 	var res models.State
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNState2githubᚗcomᚋJustinTimeToCodeᚋtogoᚑlistᚋgraphᚋmodelsᚐState(ctx context.Context, sel ast.SelectionSet, v models.State) graphql.Marshaler {
+func (ec *executionContext) marshalNState2githubᚗcomᚋthisjustinfᚋtogoᚑlistᚋinternalᚋgraphqlᚋmodelsᚐState(ctx context.Context, sel ast.SelectionSet, v models.State) graphql.Marshaler {
 	return v
 }
 
@@ -5063,11 +5063,11 @@ func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel as
 	return res
 }
 
-func (ec *executionContext) marshalNTodo2githubᚗcomᚋJustinTimeToCodeᚋtogoᚑlistᚋgraphᚋmodelsᚐTodo(ctx context.Context, sel ast.SelectionSet, v models.Todo) graphql.Marshaler {
+func (ec *executionContext) marshalNTodo2githubᚗcomᚋthisjustinfᚋtogoᚑlistᚋinternalᚋgraphqlᚋmodelsᚐTodo(ctx context.Context, sel ast.SelectionSet, v models.Todo) graphql.Marshaler {
 	return ec._Todo(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNTodo2ᚖgithubᚗcomᚋJustinTimeToCodeᚋtogoᚑlistᚋgraphᚋmodelsᚐTodo(ctx context.Context, sel ast.SelectionSet, v *models.Todo) graphql.Marshaler {
+func (ec *executionContext) marshalNTodo2ᚖgithubᚗcomᚋthisjustinfᚋtogoᚑlistᚋinternalᚋgraphqlᚋmodelsᚐTodo(ctx context.Context, sel ast.SelectionSet, v *models.Todo) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -5092,11 +5092,11 @@ func (ec *executionContext) marshalNUUID2githubᚗcomᚋgoogleᚋuuidᚐUUID(ctx
 	return res
 }
 
-func (ec *executionContext) marshalNUser2githubᚗcomᚋJustinTimeToCodeᚋtogoᚑlistᚋgraphᚋmodelsᚐUser(ctx context.Context, sel ast.SelectionSet, v models.User) graphql.Marshaler {
+func (ec *executionContext) marshalNUser2githubᚗcomᚋthisjustinfᚋtogoᚑlistᚋinternalᚋgraphqlᚋmodelsᚐUser(ctx context.Context, sel ast.SelectionSet, v models.User) graphql.Marshaler {
 	return ec._User(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNUser2ᚖgithubᚗcomᚋJustinTimeToCodeᚋtogoᚑlistᚋgraphᚋmodelsᚐUser(ctx context.Context, sel ast.SelectionSet, v *models.User) graphql.Marshaler {
+func (ec *executionContext) marshalNUser2ᚖgithubᚗcomᚋthisjustinfᚋtogoᚑlistᚋinternalᚋgraphqlᚋmodelsᚐUser(ctx context.Context, sel ast.SelectionSet, v *models.User) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -5385,7 +5385,7 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
-func (ec *executionContext) unmarshalOCreateTodoDTO2ᚖgithubᚗcomᚋJustinTimeToCodeᚋtogoᚑlistᚋgraphᚋmodelsᚐCreateTodoDto(ctx context.Context, v interface{}) (*models.CreateTodoDto, error) {
+func (ec *executionContext) unmarshalOCreateTodoDTO2ᚖgithubᚗcomᚋthisjustinfᚋtogoᚑlistᚋinternalᚋgraphqlᚋmodelsᚐCreateTodoDto(ctx context.Context, v interface{}) (*models.CreateTodoDto, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -5393,7 +5393,7 @@ func (ec *executionContext) unmarshalOCreateTodoDTO2ᚖgithubᚗcomᚋJustinTime
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOLoginDTO2ᚖgithubᚗcomᚋJustinTimeToCodeᚋtogoᚑlistᚋgraphᚋmodelsᚐLoginDto(ctx context.Context, v interface{}) (*models.LoginDto, error) {
+func (ec *executionContext) unmarshalOLoginDTO2ᚖgithubᚗcomᚋthisjustinfᚋtogoᚑlistᚋinternalᚋgraphqlᚋmodelsᚐLoginDto(ctx context.Context, v interface{}) (*models.LoginDto, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -5401,7 +5401,7 @@ func (ec *executionContext) unmarshalOLoginDTO2ᚖgithubᚗcomᚋJustinTimeToCod
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalORegisterDTO2ᚖgithubᚗcomᚋJustinTimeToCodeᚋtogoᚑlistᚋgraphᚋmodelsᚐRegisterDto(ctx context.Context, v interface{}) (*models.RegisterDto, error) {
+func (ec *executionContext) unmarshalORegisterDTO2ᚖgithubᚗcomᚋthisjustinfᚋtogoᚑlistᚋinternalᚋgraphqlᚋmodelsᚐRegisterDto(ctx context.Context, v interface{}) (*models.RegisterDto, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -5409,7 +5409,7 @@ func (ec *executionContext) unmarshalORegisterDTO2ᚖgithubᚗcomᚋJustinTimeTo
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOResponseData2githubᚗcomᚋJustinTimeToCodeᚋtogoᚑlistᚋgraphᚋmodelsᚐResponseData(ctx context.Context, sel ast.SelectionSet, v models.ResponseData) graphql.Marshaler {
+func (ec *executionContext) marshalOResponseData2githubᚗcomᚋthisjustinfᚋtogoᚑlistᚋinternalᚋgraphqlᚋmodelsᚐResponseData(ctx context.Context, sel ast.SelectionSet, v models.ResponseData) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -5432,7 +5432,7 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 	return res
 }
 
-func (ec *executionContext) marshalOTodo2ᚕᚖgithubᚗcomᚋJustinTimeToCodeᚋtogoᚑlistᚋgraphᚋmodelsᚐTodoᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.Todo) graphql.Marshaler {
+func (ec *executionContext) marshalOTodo2ᚕᚖgithubᚗcomᚋthisjustinfᚋtogoᚑlistᚋinternalᚋgraphqlᚋmodelsᚐTodoᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.Todo) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -5459,7 +5459,7 @@ func (ec *executionContext) marshalOTodo2ᚕᚖgithubᚗcomᚋJustinTimeToCode�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNTodo2ᚖgithubᚗcomᚋJustinTimeToCodeᚋtogoᚑlistᚋgraphᚋmodelsᚐTodo(ctx, sel, v[i])
+			ret[i] = ec.marshalNTodo2ᚖgithubᚗcomᚋthisjustinfᚋtogoᚑlistᚋinternalᚋgraphqlᚋmodelsᚐTodo(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -5495,7 +5495,7 @@ func (ec *executionContext) marshalOUUID2ᚖgithubᚗcomᚋgoogleᚋuuidᚐUUID(
 	return res
 }
 
-func (ec *executionContext) unmarshalOUpdateTodoDTO2ᚖgithubᚗcomᚋJustinTimeToCodeᚋtogoᚑlistᚋgraphᚋmodelsᚐUpdateTodoDto(ctx context.Context, v interface{}) (*models.UpdateTodoDto, error) {
+func (ec *executionContext) unmarshalOUpdateTodoDTO2ᚖgithubᚗcomᚋthisjustinfᚋtogoᚑlistᚋinternalᚋgraphqlᚋmodelsᚐUpdateTodoDto(ctx context.Context, v interface{}) (*models.UpdateTodoDto, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -5503,7 +5503,7 @@ func (ec *executionContext) unmarshalOUpdateTodoDTO2ᚖgithubᚗcomᚋJustinTime
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOUpdateUserDTO2ᚖgithubᚗcomᚋJustinTimeToCodeᚋtogoᚑlistᚋgraphᚋmodelsᚐUpdateUserDto(ctx context.Context, v interface{}) (*models.UpdateUserDto, error) {
+func (ec *executionContext) unmarshalOUpdateUserDTO2ᚖgithubᚗcomᚋthisjustinfᚋtogoᚑlistᚋinternalᚋgraphqlᚋmodelsᚐUpdateUserDto(ctx context.Context, v interface{}) (*models.UpdateUserDto, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -5511,7 +5511,7 @@ func (ec *executionContext) unmarshalOUpdateUserDTO2ᚖgithubᚗcomᚋJustinTime
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOUser2ᚖgithubᚗcomᚋJustinTimeToCodeᚋtogoᚑlistᚋgraphᚋmodelsᚐUser(ctx context.Context, sel ast.SelectionSet, v *models.User) graphql.Marshaler {
+func (ec *executionContext) marshalOUser2ᚖgithubᚗcomᚋthisjustinfᚋtogoᚑlistᚋinternalᚋgraphqlᚋmodelsᚐUser(ctx context.Context, sel ast.SelectionSet, v *models.User) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

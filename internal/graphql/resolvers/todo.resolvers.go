@@ -9,9 +9,8 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-
-	"github.com/JustinTimeToCode/togo-list/graph/generated"
-	"github.com/JustinTimeToCode/togo-list/graph/models"
+	"github.com/thisjustinf/togo-list/internal/graphql/generated"
+	"github.com/thisjustinf/togo-list/internal/graphql/models"
 )
 
 // CreateTodo is the resolver for the createTodo field.

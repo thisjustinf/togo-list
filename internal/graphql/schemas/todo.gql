@@ -3,9 +3,9 @@ type Todo {
   title: String!
   description: String!
   completed: Boolean!
-  user: UUID!
+  userId: UUID!
   createdAt: Time!
-  lastUpdatedAt: Time!
+  updatedAt: Time!
 }
 
 input CreateTodoDTO {

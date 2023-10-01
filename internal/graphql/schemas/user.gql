@@ -5,7 +5,7 @@ type User {
   username: String!
   password: String!
   createdAt: Time!
-  lastUpdatedAt: Time!
+  updatedAt: Time!
 }
 
 input RegisterDTO{

@@ -35,17 +35,17 @@ type RegisterDto struct {
 type ResponseStatus struct {
 	Status  State        `json:"status"`
 	Message string       `json:"message"`
-	Payload ResponseData `json:"payload,omitempty"`
+	Data    ResponseData `json:"data,omitempty"`
 }
 
 type Todo struct {
-	ID            string    `json:"id"`
-	Title         string    `json:"title"`
-	Description   string    `json:"description"`
-	Completed     bool      `json:"completed"`
-	User          uuid.UUID `json:"user"`
-	CreatedAt     time.Time `json:"createdAt"`
-	LastUpdatedAt time.Time `json:"lastUpdatedAt"`
+	ID          string    `json:"id"`
+	Title       string    `json:"title"`
+	Description string    `json:"description"`
+	Completed   bool      `json:"completed"`
+	UserID      uuid.UUID `json:"userId"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
 }
 
 func (Todo) IsResponseData() {}
@@ -62,13 +62,13 @@ type UpdateUserDto struct {
 }
 
 type User struct {
-	ID            uuid.UUID `json:"id"`
-	FirstName     string    `json:"firstName"`
-	LastName      string    `json:"lastName"`
-	Username      string    `json:"username"`
-	Password      string    `json:"password"`
-	CreatedAt     time.Time `json:"createdAt"`
-	LastUpdatedAt time.Time `json:"lastUpdatedAt"`
+	ID        uuid.UUID `json:"id"`
+	FirstName string    `json:"firstName"`
+	LastName  string    `json:"lastName"`
+	Username  string    `json:"username"`
+	Password  string    `json:"password"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 func (User) IsResponseData() {}

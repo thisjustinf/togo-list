@@ -8,7 +8,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/JustinTimeToCode/togo-list/graph/generated"
+	"github.com/thisjustinf/togo-list/internal/graphql/generated"
 )
 
 // Health is the resolver for the health field.

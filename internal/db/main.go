@@ -8,7 +8,13 @@ import (
 	"github.com/pkg/errors"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+
+	// ent "github.com/thisjustinf/togo-list/internal/db/entities"
+	"github.com/thisjustinf/togo-list/internal/graphql/models"
 )
+
+// var DBInstance *gorm.DB
+// var err error
 
 func InitDB() (*gorm.DB, error) {
 	POSTGRES_USER := os.Getenv("POSTGRES_USER")
@@ -24,5 +30,6 @@ func InitDB() (*gorm.DB, error) {
 		return nil, errors.Wrap(err, "failed to connect to database")
 	}
 	log.Println("Successfully connected to the DB!")
+	db.AutoMigrate(&models.User{}, &models.Todo{})
 	return db, nil
 }

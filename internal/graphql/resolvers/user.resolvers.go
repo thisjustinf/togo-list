@@ -9,8 +9,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-
-	"github.com/JustinTimeToCode/togo-list/graph/models"
+	"github.com/thisjustinf/togo-list/internal/graphql/models"
 )
 
 // Register is the resolver for the register field.

@@ -14,7 +14,7 @@ union ResponseData = Todo | User
 type ResponseStatus{
   status: State!
   message: String!
-  payload: ResponseData
+  data: ResponseData
 }
 
 type Query {

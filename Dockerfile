@@ -17,7 +17,10 @@ COPY . .
 RUN go run github.com/99designs/gqlgen generate
 
 # Build the Go application
-RUN go build -o server .
+# RUN go build -o server .
+
+# Build the Go application
+RUN GOARCH=amd64 GOOS=linux go build -o /app/main ./cmd
 
 # Use a lightweight Alpine Linux as the base image for the final image
 FROM alpine:latest
@@ -26,10 +29,13 @@ FROM alpine:latest
 WORKDIR /app
 
 # Copy the binary from the builder stage to this stage
-COPY --from=builder /app/server .
+COPY --from=builder /app/main .
+
+# Set execute permissions
+RUN chmod +x /app/main
 
 # Expose the port your application is running on
 EXPOSE 8080
 
 # Start the Go application
-CMD ["./server"]
+CMD ["./main"]
