@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -17,7 +18,7 @@ import (
 func Run(orm *gorm.DB) {
 	logger, err := zap.NewDevelopment()
 	if err != nil {
-		panic("")
+		log.Fatal(err)
 	}
 	r := gin.New()
 	// Add a ginzap middleware, which:
